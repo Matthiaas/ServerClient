@@ -50,7 +50,7 @@ public:
 	char readChar();
 	int readInt();
 	long long  readLong();
-	void read(char* buf, int len , int off);
+	bool read(char* buf, int len , int off);
 	std::string readString();
 
 
