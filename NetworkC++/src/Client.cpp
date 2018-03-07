@@ -25,7 +25,7 @@ Client::Client(int sock) {
 	closed = false;
 }
 
-Client::~Client() 
+Client::~Client() {
 	closed = false;
 }
 
