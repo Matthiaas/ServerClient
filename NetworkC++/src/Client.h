@@ -23,6 +23,12 @@
 #include <vector>
 #include <stdexcept>
 
+
+#define ENABLE_OUTPUT false
+#define ENABLE_EXCEPTIONS true
+
+
+
 namespace Network {
 
 class Client {
