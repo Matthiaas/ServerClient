@@ -25,17 +25,28 @@ Client::Client(int sock) {
 	closed = false;
 }
 
-Client::~Client() {
+Client::~Client(){
 	closed = false;
 }
+
+
+
+inline void net_error(char * str){
+#if ENABLE_EXCEPTIONS
+		throw std::runtime_error(str);
+#endif
+#if ENABLE_OUTPUT
+		std::cerr << str << std::endl;
+#endif
+}
+
 
 bool Client::setUpConnection() {
 	if (sock != -1)
 		return false;
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == -1) {
-		std::cout << "Could not create socket" << std::endl;
-		throw std::exception("Could not create socket");
+		net_error("Could not create socket");
 		return false;
 	}
 
@@ -44,8 +55,7 @@ bool Client::setUpConnection() {
 	server.sin_port = htons(port);
 
 	if (connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0) {
-		perror("connect failed. Error");
-		throw std::exception("Connection Failed");
+		net_error("Connection Failed");
 		return false;
 	}
 
@@ -62,8 +72,7 @@ void Client::closeConnection(){
 bool Client::writeChar(char c) {
 
 	if (send(sock, &c, 1, 0) <= 0) {
-		std::cout << "Send failed : " << c << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -72,8 +81,7 @@ bool Client::writeChar(char c) {
 
 bool Client::writeByte(int c) {
 	if (send(sock, &c, 1, 0) <= 0) {
-		std::cout << "Send failed : " << c << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -82,8 +90,7 @@ bool Client::writeByte(int c) {
 
 bool Client::writeCharArray(char* c, int len) {
 	if (send(sock, c, len, 0) <= 0) {
-		std::cout << "Send failed : " << c << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -93,8 +100,7 @@ bool Client::writeCharArray(char* c, int len) {
 bool Client::writeCharVector(std::vector<char>& v) {
 	if (send(sock, &v[0], v.size(), 0) <= 0) {
 		closed = true;
-		std::cout << "Send failed : vector" << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		return false;
 	}
 	return true;
@@ -103,8 +109,7 @@ bool Client::writeCharVector(std::vector<char>& v) {
 
 bool Client::writeString(std::string& s) {
 	if (send(sock, s.c_str(), s.size() + 1, 0) <= 0) {
-		std::cout << "Send failed : " << s << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -114,8 +119,7 @@ bool Client::writeString(std::string& s) {
 bool Client::writeInt(int value) {
 	value = __builtin_bswap32(value);
 	if (send(sock, &value, 8, 0) <= 0) {
-		std::cout << "Send failed : " << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -125,8 +129,7 @@ bool Client::writeInt(int value) {
 bool Client::writeLong(long long value) {
 	value = __builtin_bswap64(value);
 	if (send(sock, &value, 16, 0) <= 0) {
-		std::cout << "Send failed : " << std::endl;
-		throw std::exception("Send failed");
+		net_error("Send failed");
 		closed = true;
 		return false;
 	}
@@ -137,8 +140,7 @@ bool Client::writeLong(long long value) {
 int Client::readByte() {
 	int res = 0;
 	if (recv(sock, &res, 1, 0) <= 0){ //
-		std::cout << "receive failed!" << std::endl;
-		throw std::exception("Receive failed");
+		net_error("Receive failed");
 		closed = true;
 	}
 	return res;
@@ -147,8 +149,7 @@ int Client::readByte() {
 char Client::readChar() {
 	char res = 0;
 	if (recv(sock, &res, 1, 0) <= 0) { //
-		std::cout << "receive failed!" << std::endl;
-		throw std::exception("Receive failed");
+		net_error("Receive failed");
 		closed = true;
 	}
 	return res;
@@ -159,8 +160,7 @@ int Client::readInt() {
 	for (int i = 24; i >= 0; i -= 8) {
 		int c;
 		if (recv(sock, &c, 1, 0) <= 0){ //
-			std::cout << "receive failed!" << std::endl;
-			throw std::exception("Receive failed");
+			net_error("Receive failed");
 			closed = true;
 		}
 		res |=((int)c <<i);
@@ -174,8 +174,7 @@ long long Client::readLong() {
 	for (int i = 56; i >= 0; i -= 8) {
 		char c;
 		if (recv(sock, &c, 1, 0) <= 0){ //
-			std::cout << "receive failed!" << std::endl;
-			throw std::exception("Receive failed");
+			net_error("Receive failed");
 			closed = true;
 		}
 		//(& 0xFFl) because of the cast!!!
@@ -188,8 +187,7 @@ long long Client::readLong() {
 
 bool Client::read(char* buf, int len, int off) {
 	if (recv(sock, buf+off, len, 0) <= 0){ //
-		std::cout << "receive failed!" << std::endl;
-		throw std::exception("Receive failed");
+		net_error("Receive failed");
 		closed = true;
 	}
 }
@@ -202,15 +200,13 @@ std::string Client::readString() {
 	std::ostringstream os;
 	char c;
 	do{
-		if (recv(sock, &c, 1, 0) <= 0){ //
-			std::cout << "receive failed!" << std::endl;
-			throw std::exception("Receive failed");
+		if (recv(sock, &c, 1, 0) <= 0){
+			net_error("Receive failed");
 			closed = true;
 		}
 		os << c;
 
 	}while(c != 0);
-
 	return os.str();
 }
 
