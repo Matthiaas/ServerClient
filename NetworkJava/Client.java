@@ -16,6 +16,8 @@ import java.util.Arrays;
 public class Client {
 
 	
+	private static boolean ENABLE_OUTPUT = false;
+	private static boolean ENABLE_EXCEPTIONS = false;
 	
 	private Socket socket;
 	private String adress ; 
@@ -83,7 +85,19 @@ public class Client {
 			socket.close();
 			return true;
 		} catch (IOException e) {
-			throw new NetworkException("Error Closing connection to Client",e);
+			net_errror("Error Closing connection to Client",e);
+			return false;
+		}
+	}
+	
+	
+	private void net_errror(String msg, IOException e) {
+		if(ENABLE_OUTPUT) {
+			System.err.println(msg);
+			System.err.println(e.getMessage());
+		}
+		if( ENABLE_EXCEPTIONS) {
+			throw new NetworkException(msg,e);
 		}
 	}
 	
@@ -238,7 +252,8 @@ public class Client {
 		try {
 			return in.read();
 		} catch (IOException e) {
-			throw new NetworkException("Error reading byte",e);
+			net_errror("Error reading byte",e);
+			return -1;
 		}
 	}
 	
@@ -252,7 +267,7 @@ public class Client {
 			try {
 				res |= in.read() << i;
 			} catch (IOException e) {
-				throw new NetworkException("Error reading int",e);
+				net_errror("Error reading int",e);
 			}
 		
 		return res;
@@ -262,12 +277,13 @@ public class Client {
 	 */
 	public final long readLong() {
 		long res = 0;
-		for( int i  = 56; i >= 0; i-=8)
+		for( int i  = 56; i >= 0; i-=8) {
 			try {
 				res |= ((long) in.read()) << i;
 			} catch (IOException e) {
-				throw new NetworkException("Error reading long",e);
+				net_errror("Error reading long",e);
 			}
+		}
 		
 		
 		return res;
@@ -280,12 +296,12 @@ public class Client {
 	public final String readString()  {
 		String res = "";
 		
-		char curr;
+		char curr = 0;
 		do {
 			try {
 				curr = (char)in.read();
 			} catch (IOException e) {
-				throw new NetworkException("Error reading String",e);
+				net_errror("Error reading String",e);
 			}
 			if(curr != 0) {
 				res += curr;
@@ -305,7 +321,7 @@ public class Client {
 		try {
 			in.read(buf, off, len);
 		} catch (IOException e) {
-			throw new NetworkException("Error reading byte array",e);
+			net_errror("Error reading byte array",e);
 		}
 	}
 	
@@ -316,7 +332,7 @@ public class Client {
 		try {
 			in.read(buf);
 		} catch (IOException e) {
-			throw new NetworkException("Error reading byte array",e);
+			net_errror("Error reading byte array",e);
 		}
 	}
 	
@@ -329,7 +345,7 @@ public class Client {
 		try {
 			in.read(buf);
 		}catch (IOException e) {
-			throw new NetworkException("Error reading byte array",e);
+			net_errror("Error reading byte array",e);
 		}
 		return buf;
 	}
@@ -345,7 +361,7 @@ public class Client {
 			try {
 				res[i] = (char) in.read();
 			}catch (IOException e) {
-				throw new NetworkException("Error char array",e);
+				net_errror("Error char array",e);
 			}
 		}
 		return res;
