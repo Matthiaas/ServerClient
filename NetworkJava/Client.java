@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -43,7 +42,7 @@ public class Client {
 	
 	/**
 	 * @param socket
-	 * @return
+	 * @return true if successful 
 	 */
 	public boolean setSocket(Socket socket) {
 		if(this.socket != null) return false;
@@ -76,7 +75,7 @@ public class Client {
 	
 	
 	/**
-	 * @return
+	 * @return true if successful 
 	 */
 	public final boolean disconnect() {
 		if(socket == null ) return false;
@@ -84,11 +83,14 @@ public class Client {
 			socket.close();
 			return true;
 		} catch (IOException e) {
-			throw new RuntimeException("Error Closing connection to Client");
+			throw new NetworkException("Error Closing connection to Client",e);
 		}
 	}
 	
-	
+	///////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////
+					// WRITE SECTION //
 
 	/**
 	 * @param write
@@ -105,13 +107,13 @@ public class Client {
 	}
 	
 	/**
-	 * @param b
-	 * @return
+	 * @param buf
+	 * @return true if successful 
 	 */
-	public final boolean writeByteArray(byte[] b) {
+	public final boolean writeByteArray(byte[] buf) {
 		if(socket == null ) return false;
 		try {
-			out.write(b);
+			out.write(buf);
 			return true;
 		} catch (IOException e) {
 			return false;
@@ -119,15 +121,15 @@ public class Client {
 	}
 	
 	/**
-	 * @param b
-	 * @param off
-	 * @param len
+	 * @param buf - buffer
+	 * @param off - offset
+	 * @param len - length
 	 * @return
 	 */
-	public final boolean writeByteArray(byte[] b , int off , int len) {
+	public final boolean writeByteArray(byte[] buf , int off , int len) {
 		if(socket == null ) return false;
 		try {
-			out.write(b, off, len);
+			out.write(buf, off, len);
 			return true;
 		} catch (IOException e) {
 			return false;
@@ -136,7 +138,7 @@ public class Client {
 	
 	/**
 	 * @param chars
-	 * @return
+	 * @return true if successful 
 	 */
 	private final byte[] toBytes(char[] chars) {
 	    CharBuffer charBuffer = CharBuffer.wrap(chars);
@@ -164,7 +166,7 @@ public class Client {
 	
 	/**
 	 * @param send
-	 * @return
+	 * @return true if successful 
 	 */
 	public final boolean writeInt(int send) {
 		if(socket == null ) return false;
@@ -190,7 +192,7 @@ public class Client {
 	
 	/**
 	 * @param send
-	 * @return
+	 * @return true if successful 
 	 */
 	public final boolean writeLong(long send) {
 		
@@ -207,7 +209,7 @@ public class Client {
 	
 	/**
 	 * @param s
-	 * @return
+	 * @return true if successful 
 	 */
 	public final boolean writeString(String s) {
 		if(socket == null ) return false;
@@ -230,19 +232,19 @@ public class Client {
 	//////////////////////////////////////////////////////////////
 						// READ SECTION //
 	/**
-	 * @return
+	 * @return byte
 	 */
 	public final int readByte()  {
 		try {
 			return in.read();
 		} catch (IOException e) {
-			throw new RuntimeException("Error reading byte");
+			throw new NetworkException("Error reading byte",e);
 		}
 	}
 	
 	
 	/**
-	 * @return
+	 * @return int
 	 */
 	public final int readInt() {
 		int res = 0;
@@ -250,13 +252,13 @@ public class Client {
 			try {
 				res |= in.read() << i;
 			} catch (IOException e) {
-				throw new RuntimeException("Error reading int");
+				throw new NetworkException("Error reading int",e);
 			}
 		
 		return res;
 	}
 	/**
-	 * @return
+	 * @return long
 	 */
 	public final long readLong() {
 		long res = 0;
@@ -264,7 +266,7 @@ public class Client {
 			try {
 				res |= ((long) in.read()) << i;
 			} catch (IOException e) {
-				throw new RuntimeException("Error reading long");
+				throw new NetworkException("Error reading long",e);
 			}
 		
 		
@@ -273,7 +275,7 @@ public class Client {
 	
 	
 	/**
-	 * @return
+	 * @return String
 	 */
 	public final String readString()  {
 		String res = "";
@@ -283,7 +285,7 @@ public class Client {
 			try {
 				curr = (char)in.read();
 			} catch (IOException e) {
-				throw new RuntimeException("Error reading String");
+				throw new NetworkException("Error reading String",e);
 			}
 			if(curr != 0) {
 				res += curr;
@@ -295,47 +297,47 @@ public class Client {
 	
 	
 	/**
-	 * @param b
-	 * @param off
-	 * @param len
+	 * @param buf - buffer
+	 * @param off - offset
+	 * @param len - length
 	 */
-	public final void readByteArray(byte[] b , int off , int len)  {
+	public final void readByteArray(byte[] buf , int off , int len)  {
 		try {
-			in.read(b, off, len);
+			in.read(buf, off, len);
 		} catch (IOException e) {
-			throw new RuntimeException("Error reading byte array");
+			throw new NetworkException("Error reading byte array",e);
 		}
 	}
 	
 	/**
-	 * @param b
+	 * @param buf - buffer
 	 */
-	public final void readByteArray(byte[] b ) {
+	public final void readByteArray(byte[] buf ) {
 		try {
-			in.read(b);
+			in.read(buf);
 		} catch (IOException e) {
-			throw new RuntimeException("Error reading byte array");
+			throw new NetworkException("Error reading byte array",e);
 		}
 	}
 	
 	/**
-	 * @param len
-	 * @return
+	 * @param len - length
+	 * @return byte array of length len
 	 */
 	public final byte[] readByteArray(int len)  {
-		byte[] b = new byte[len];
+		byte[] buf = new byte[len];
 		try {
-			in.read(b);
+			in.read(buf);
 		}catch (IOException e) {
-			throw new RuntimeException("Error reading byte array");
+			throw new NetworkException("Error reading byte array",e);
 		}
-		return b;
+		return buf;
 	}
 	
 	
 	/**
-	 * @param len
-	 * @return
+	 * @param len - length
+	 * @return char array of length len
 	 */
 	public final char[] readCharArray(int len)  {
 		char[] res= new char[len];
@@ -343,7 +345,7 @@ public class Client {
 			try {
 				res[i] = (char) in.read();
 			}catch (IOException e) {
-				throw new RuntimeException("Error char array");
+				throw new NetworkException("Error char array",e);
 			}
 		}
 		return res;
@@ -360,9 +362,9 @@ public class Client {
 	
 	
 	/**
-	 * @return
+	 * @return true if client connected
 	 */
-	public boolean isConnected() {		
+	public final boolean isConnected() {		
 		if(socket == null ) return false;
 		return socket.isConnected();
 	}
