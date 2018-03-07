@@ -45,7 +45,7 @@ bool Client::setUpConnection() {
 
 	if (connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0) {
 		perror("connect failed. Error");
-		throw std::exception(Connection Failed");
+		throw std::exception("Connection Failed");
 		return false;
 	}
 
