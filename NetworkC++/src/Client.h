@@ -21,6 +21,7 @@
 #include <netdb.h>
 #include <netdb.h>
 #include <vector>
+#include <stdexcept>
 
 namespace Network {
 
@@ -38,7 +39,7 @@ public:
 	bool writeChar(char c);
 	bool writeByte(int c);
 	bool writeCharArray(char *c, int len);
-	bool wirteCharVector(std::vector<char> &v);
+	bool writeCharVector(std::vector<char> &v);
 	bool writeString(std::string &s);
 	bool writeInt(int i);
 	bool writeLong(long long  l);
@@ -49,7 +50,7 @@ public:
 	char readChar();
 	int readInt();
 	long long  readLong();
-	void read(char[] , int len , int off);
+	void read(char* buf, int len , int off);
 	std::string readString();
 
 
